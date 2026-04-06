@@ -1,13 +1,64 @@
 "use client";
 
-import { demoComparison, computeRedFlags, formatCurrency } from "@/lib/demoData";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { demoComparison, computeRedFlags, formatCurrency, DemoComparison } from "@/lib/demoData";
+import type { ExtractionResult, ExtractedBid } from "@/app/api/extract/route";
 import BidCard from "@/components/BidCard";
 import ComparisonTable from "@/components/ComparisonTable";
 import RedFlags from "@/components/RedFlags";
 import Link from "next/link";
 
-export default function ResultsPage() {
-  const data = demoComparison;
+function buildComparisonFromExtracted(result: ExtractionResult): DemoComparison {
+  const contractors = result.contractors.map((c) => ({
+    name: c.contractor_name,
+    company: c.contractor_name,
+    total: c.grand_total,
+  }));
+
+  // Collect all unique item descriptions across all contractors
+  const allDescriptions: string[] = [];
+  for (const c of result.contractors) {
+    for (const item of c.items) {
+      if (!allDescriptions.includes(item.description)) {
+        allDescriptions.push(item.description);
+      }
+    }
+  }
+
+  const lineItems = allDescriptions.map((desc) => ({
+    category: desc.split(" ").slice(0, 3).join(" "),
+    description: desc,
+    prices: result.contractors.map((c) => {
+      const match = c.items.find(
+        (i) => i.description.toLowerCase() === desc.toLowerCase()
+      );
+      return match ? match.total : null;
+    }),
+  }));
+
+  const projectType = result.contractors[0]?.project_type || "Contractor Bid";
+
+  return { project: projectType, contractors, lineItems };
+}
+
+function ResultsContent() {
+  const searchParams = useSearchParams();
+  const rawData = searchParams.get("data");
+  const isDemo = searchParams.get("demo") === "true" || !rawData;
+
+  let data: DemoComparison = demoComparison;
+  let parseError = false;
+
+  if (rawData) {
+    try {
+      const decoded = JSON.parse(atob(decodeURIComponent(rawData))) as ExtractionResult;
+      data = buildComparisonFromExtracted(decoded);
+    } catch {
+      parseError = true;
+    }
+  }
+
   const flags = computeRedFlags(data);
 
   const totals = data.contractors.map((_, i) =>
@@ -44,8 +95,8 @@ export default function ResultsPage() {
                 Upload new bids
               </Link>
               <div className="flex items-center gap-2 mb-2">
-                <span className="bg-blue-100 text-[#1E40AF] text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
-                  Demo Comparison
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${isDemo ? "bg-blue-100 text-[#1E40AF]" : "bg-emerald-100 text-emerald-700"}`}>
+                  {isDemo ? "Demo Comparison" : "AI Extraction"}
                 </span>
                 <span className="text-slate-400 text-xs">·</span>
                 <span className="text-slate-500 text-xs">{data.lineItems.length} line items extracted</span>
@@ -81,6 +132,12 @@ export default function ResultsPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {parseError && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
+            Could not read extracted data — showing demo instead.
+          </div>
+        )}
+
         {/* Savings banner */}
         {savings > 0 && (
           <div className="bg-gradient-to-r from-[#10B981] to-emerald-600 rounded-2xl p-5 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -97,22 +154,24 @@ export default function ResultsPage() {
                 </div>
               </div>
             </div>
-            <Link
-              href="/compare"
-              className="bg-white text-[#10B981] px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-50 transition-colors flex-shrink-0 text-center"
-            >
-              Compare Your Own Bids
-            </Link>
+            {isDemo && (
+              <Link
+                href="/compare"
+                className="bg-white text-[#10B981] px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-50 transition-colors flex-shrink-0 text-center"
+              >
+                Compare Your Own Bids
+              </Link>
+            )}
           </div>
         )}
 
         {/* Bid summary cards */}
         <div>
           <h2 className="text-lg font-bold text-slate-900 mb-4">Summary by Contractor</h2>
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className={`grid gap-4 ${data.contractors.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
             {data.contractors.map((bid, i) => (
               <BidCard
-                key={bid.company}
+                key={bid.company + i}
                 bid={bid}
                 index={i}
                 isLowest={totals[i] === minTotal}
@@ -184,5 +243,13 @@ export default function ResultsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResultsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center text-slate-500">Loading...</div>}>
+      <ResultsContent />
+    </Suspense>
   );
 }

@@ -25,15 +25,39 @@ export default function ComparePage() {
     });
   }
 
+  const [error, setError] = useState<string | null>(null);
   const uploadedCount = files.filter(Boolean).length;
   const canCompare = uploadedCount >= 2;
 
-  function handleCompare() {
+  async function handleCompare() {
     setIsComparing(true);
-    // Simulate processing delay for UX
-    setTimeout(() => {
-      router.push("/results?demo=true");
-    }, 1800);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      for (const f of files) {
+        if (f) formData.append("files", f.file);
+      }
+
+      const res = await fetch("/api/extract", {
+        method: "POST",
+        body: formData,
+        signal: AbortSignal.timeout(65_000),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(body.error || `Server error ${res.status}`);
+      }
+
+      const data = await res.json();
+      const encoded = btoa(JSON.stringify(data));
+      router.push(`/results?data=${encodeURIComponent(encoded)}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      setError(message);
+      setIsComparing(false);
+    }
   }
 
   function handleTryDemo() {
@@ -113,7 +137,7 @@ export default function ComparePage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Analyzing your bids…
+                Analyzing your bids... This takes about 30 seconds
               </>
             ) : (
               <>
@@ -133,10 +157,16 @@ export default function ComparePage() {
           </button>
         </div>
 
-        {!canCompare && (
+        {!canCompare && !error && (
           <p className="text-center text-sm text-slate-400 mt-3">
             Upload at least 2 contractor bids to compare
           </p>
+        )}
+
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            <strong>Error:</strong> {error}
+          </div>
         )}
 
         {/* Tips */}
