@@ -1,10 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const maxDuration = 60;
 
 const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILES = 3;
+const ORIGIN = process.env.NEXT_PUBLIC_BASE_URL || "https://bid-compare.vercel.app";
 
 export interface ExtractedBid {
   contractor_name: string;
@@ -53,7 +56,44 @@ Rules:
 - All numeric values must be numbers (not strings)
 - If any field is unclear, make your best estimate and add a note`;
 
+function sanitizeFilename(name: string): string {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 255);
+}
+
+function corsHeaders(origin: string) {
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const requestOrigin = request.headers.get("origin") ?? "";
+  const allowed = requestOrigin === ORIGIN;
+  return new Response(null, {
+    status: 204,
+    headers: allowed ? corsHeaders(ORIGIN) : {},
+  });
+}
+
 export async function POST(request: NextRequest) {
+  // CORS: only allow same origin
+  const requestOrigin = request.headers.get("origin") ?? "";
+  if (requestOrigin && requestOrigin !== ORIGIN) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // Rate limiting by IP
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  const { allowed, retryAfter } = checkRateLimit(ip, "extract");
+  if (!allowed) {
+    return Response.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
@@ -71,18 +111,22 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "At least 2 files are required" }, { status: 400 });
   }
 
-  // Validate files
+  if (files.length > MAX_FILES) {
+    return Response.json({ error: `Maximum ${MAX_FILES} files allowed` }, { status: 400 });
+  }
+
+  // Validate files server-side
   for (const file of files) {
     if (file.size > MAX_FILE_SIZE) {
       return Response.json(
-        { error: `File "${file.name}" exceeds 10MB limit` },
+        { error: `File "${sanitizeFilename(file.name)}" exceeds 10MB limit` },
         { status: 400 }
       );
     }
     const type = file.type || "application/octet-stream";
     if (!ALLOWED_TYPES.includes(type)) {
       return Response.json(
-        { error: `File "${file.name}" must be a PDF, JPG, or PNG` },
+        { error: `File "${sanitizeFilename(file.name)}" must be a PDF, JPG, or PNG` },
         { status: 400 }
       );
     }
@@ -91,9 +135,11 @@ export async function POST(request: NextRequest) {
   try {
     const contractors: ExtractedBid[] = await Promise.all(
       files.map(async (file) => {
+        // Process in memory only — no disk writes
         const bytes = await file.arrayBuffer();
         const base64 = Buffer.from(bytes).toString("base64");
         const fileType = file.type || "application/pdf";
+        const safeName = sanitizeFilename(file.name);
 
         let contentBlock: Anthropic.MessageParam["content"];
 
@@ -140,16 +186,15 @@ export async function POST(request: NextRequest) {
         raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
 
         const parsed = JSON.parse(raw) as ExtractedBid;
-        // If contractor_name is missing, use filename
         if (!parsed.contractor_name) {
-          parsed.contractor_name = file.name.replace(/\.[^.]+$/, "");
+          parsed.contractor_name = safeName.replace(/\.[^.]+$/, "");
         }
         return parsed;
       })
     );
 
     const result: ExtractionResult = { contractors };
-    return Response.json(result);
+    return Response.json(result, { headers: corsHeaders(ORIGIN) });
   } catch (err) {
     if (err instanceof Anthropic.AuthenticationError) {
       return Response.json(
