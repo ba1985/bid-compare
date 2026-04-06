@@ -9,9 +9,15 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "BidCompare — Compare Contractor Bids in Seconds",
+  title: "BidCompare — Compare Contractor Bids Instantly",
   description:
-    "Upload your contractor quotes. AI extracts line items and shows a side-by-side comparison highlighting price differences, missing items, and red flags.",
+    "Stop overpaying contractors. Upload your bids, get an instant AI-powered side-by-side comparison, and save thousands on your home improvement project.",
+  keywords: "contractor bid comparison, compare contractor quotes, home improvement savings, contractor estimate tool",
+  openGraph: {
+    title: "BidCompare — Compare Contractor Bids Instantly",
+    description: "Stop overpaying contractors. Upload your bids, get an instant AI-powered side-by-side comparison, and save thousands on your home improvement project.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

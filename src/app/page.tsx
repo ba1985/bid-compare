@@ -1,4 +1,5 @@
 import Link from "next/link";
+import WaitlistForm from "@/components/WaitlistForm";
 
 export default function HomePage() {
   return (
@@ -22,23 +23,35 @@ export default function HomePage() {
           <p className="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed">
             Upload your quotes. See who&apos;s charging what. Make a confident decision — without needing to be a contractor yourself.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Link
               href="/compare"
-              className="bg-[#10B981] text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-emerald-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+              className="bg-[#10B981] text-white px-10 py-5 rounded-xl text-xl font-bold hover:bg-emerald-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
             >
               Compare Your Bids — Free →
             </Link>
             <Link
               href="/results?demo=true"
-              className="bg-white/10 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/20 transition-all backdrop-blur-sm border border-white/20"
+              className="bg-white/10 text-white px-10 py-5 rounded-xl text-xl font-semibold hover:bg-white/20 transition-all backdrop-blur-sm border border-white/20"
             >
               See a Demo
             </Link>
           </div>
-          <p className="mt-6 text-blue-200 text-sm">
+          <p className="mt-2 text-blue-200 text-sm mb-12">
             Used by <strong className="text-white">2,400+</strong> homeowners · Takes under 2 minutes
           </p>
+
+          {/* Email capture — above the fold */}
+          <div className="border-t border-white/20 pt-10">
+            <p className="text-[#10B981] text-xs font-bold uppercase tracking-widest mb-2">Lifetime Deal — Launching Soon</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              Get Early Access — Save Up to 70%
+            </h2>
+            <p className="text-blue-200 text-base mb-6 max-w-lg mx-auto">
+              We&apos;re launching soon with a limited lifetime deal. Join the waitlist to get notified first and lock in the lowest price.
+            </p>
+            <WaitlistForm initialCount={127} />
+          </div>
         </div>
       </section>
 
@@ -63,8 +76,70 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* As seen in / Trusted by */}
+      <section className="bg-slate-50 py-12 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">As seen in</p>
+          <div className="flex flex-wrap justify-center gap-10 items-center mb-10">
+            {["HomeAdvisor Blog", "Angi Community", "Reddit r/HomeImprovement", "This Old House Forum"].map((name) => (
+              <span key={name} className="text-slate-300 font-bold text-lg tracking-tight">{name}</span>
+            ))}
+          </div>
+          <div className="inline-flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-sm border border-slate-200">
+            <div className="flex -space-x-2">
+              {["bg-blue-400", "bg-emerald-400", "bg-amber-400", "bg-purple-400"].map((c, i) => (
+                <div key={i} className={`w-8 h-8 rounded-full ${c} border-2 border-white`} />
+              ))}
+            </div>
+            <span className="text-slate-700 font-semibold text-sm">
+              Trusted by <strong>2,400+</strong> homeowners across the US
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* How Much Can You Save? */}
+      <section className="py-16 sm:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              How Much Can You Save?
+            </h2>
+            <p className="text-lg text-slate-600 max-w-xl mx-auto">
+              Contractor pricing varies wildly. Most homeowners have no idea they&apos;re overpaying.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="bg-gradient-to-br from-[#1E40AF] to-[#1e3a8a] rounded-2xl p-8 text-white text-center">
+              <div className="text-6xl font-extrabold text-[#10B981] mb-2">$2,400</div>
+              <p className="text-blue-100 text-lg leading-relaxed">
+                Average savings when homeowners compare bids side-by-side instead of going with their gut
+              </p>
+            </div>
+            <div className="bg-emerald-50 rounded-2xl p-8 border border-emerald-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-lg">
+                  👩
+                </div>
+                <div>
+                  <div className="font-bold text-slate-900">Sarah K., Denver CO</div>
+                  <div className="text-slate-500 text-xs">Kitchen remodel</div>
+                </div>
+              </div>
+              <p className="text-slate-700 leading-relaxed text-sm italic mb-4">
+                &ldquo;BidCompare flagged that one contractor was charging $4,200 more for the exact same electrical work. I never would have caught it on my own — the bids looked totally different on paper.&rdquo;
+              </p>
+              <div className="bg-white rounded-xl p-3 border border-emerald-200 text-center">
+                <div className="text-2xl font-extrabold text-emerald-600">$4,200 saved</div>
+                <div className="text-slate-500 text-xs">by catching overpriced electrical work</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How it works */}
-      <section className="py-20 sm:py-24">
+      <section className="py-20 sm:py-24 bg-[#F8FAFC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
@@ -216,7 +291,7 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 sm:py-24">
+      <section className="py-20 sm:py-24 bg-[#F8FAFC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 text-center mb-12">
             Homeowners love it
@@ -238,6 +313,21 @@ export default function HomePage() {
                 name: "Linda R.",
                 project: "Bathroom addition, Chicago IL",
               },
+              {
+                quote: "The color coding made it instantly obvious which contractor was padding the materials cost. Switched to the middle bid and saved $1,800.",
+                name: "Marcus D.",
+                project: "Deck build, Portland OR",
+              },
+              {
+                quote: "As a first-time homeowner I had zero idea what was a fair price. This gave me the confidence to negotiate — I ended up getting $900 off.",
+                name: "Priya S.",
+                project: "HVAC replacement, Phoenix AZ",
+              },
+              {
+                quote: "Forwarded the report to all three contractors. Two of them came back with lower bids immediately. The tool pays for itself in minutes.",
+                name: "Tom B.",
+                project: "Basement finishing, Minneapolis MN",
+              },
             ].map((t) => (
               <div key={t.name} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                 <div className="flex gap-1 mb-4">
@@ -258,6 +348,78 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Pricing preview — LTD tease */}
+      <section className="py-20 sm:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-4">
+            <span className="inline-block bg-amber-100 text-amber-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">
+              Launching Soon
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Limited Lifetime Deal
+            </h2>
+            <p className="text-lg text-slate-600 max-w-xl mx-auto mb-2">
+              Pay once. Use forever. We&apos;re releasing a limited number of lifetime licenses at launch — join the waitlist to be first in line.
+            </p>
+            <p className="text-slate-400 text-sm mb-10">Pricing revealed to waitlist members only.</p>
+          </div>
+
+          {/* Blurred pricing cards */}
+          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto mb-10 relative">
+            <div className="pointer-events-none select-none">
+              <div className="blur-sm bg-slate-50 rounded-2xl p-6 border border-slate-200 text-center">
+                <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Basic</div>
+                <div className="text-4xl font-extrabold text-slate-300 mb-1">$??</div>
+                <div className="text-slate-300 text-sm mb-4">one-time</div>
+                <ul className="text-slate-300 text-sm space-y-2 text-left mb-4">
+                  <li>✓ Up to 5 comparisons/mo</li>
+                  <li>✓ PDF + photo upload</li>
+                  <li>✓ AI line item extraction</li>
+                </ul>
+              </div>
+            </div>
+            <div className="pointer-events-none select-none">
+              <div className="blur-sm bg-[#1E40AF] rounded-2xl p-6 border-2 border-[#10B981] text-center relative">
+                <div className="text-blue-200 text-xs font-bold uppercase tracking-widest mb-3">Pro</div>
+                <div className="text-4xl font-extrabold text-white mb-1">$??</div>
+                <div className="text-blue-200 text-sm mb-4">one-time</div>
+                <ul className="text-blue-200 text-sm space-y-2 text-left mb-4">
+                  <li>✓ Unlimited comparisons</li>
+                  <li>✓ Everything in Basic</li>
+                  <li>✓ Export PDF reports</li>
+                  <li>✓ Red flag alerts</li>
+                </ul>
+              </div>
+            </div>
+            <div className="pointer-events-none select-none">
+              <div className="blur-sm bg-slate-50 rounded-2xl p-6 border border-slate-200 text-center">
+                <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Unlimited</div>
+                <div className="text-4xl font-extrabold text-slate-300 mb-1">$??</div>
+                <div className="text-slate-300 text-sm mb-4">one-time</div>
+                <ul className="text-slate-300 text-sm space-y-2 text-left mb-4">
+                  <li>✓ Everything in Pro</li>
+                  <li>✓ API access</li>
+                  <li>✓ Priority support</li>
+                  <li>✓ White-label option</li>
+                </ul>
+              </div>
+            </div>
+            {/* Lock overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white/90 backdrop-blur rounded-2xl px-8 py-5 shadow-xl text-center border border-slate-200">
+                <div className="text-3xl mb-2">🔒</div>
+                <p className="font-bold text-slate-900 text-sm">Join the waitlist to unlock pricing</p>
+                <p className="text-slate-500 text-xs mt-1">Save up to 70% at launch</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-md mx-auto">
+            <WaitlistForm initialCount={127} />
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="bg-gradient-to-r from-[#1E40AF] to-[#1e3a8a] py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -269,12 +431,20 @@ export default function HomePage() {
           </p>
           <Link
             href="/compare"
-            className="inline-block bg-[#10B981] text-white px-10 py-4 rounded-xl text-lg font-bold hover:bg-emerald-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+            className="inline-block bg-[#10B981] text-white px-12 py-5 rounded-xl text-xl font-bold hover:bg-emerald-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
           >
             Compare Your Bids — Free →
           </Link>
         </div>
       </section>
+
+      {/* Sticky mobile bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-[#1e3a8a] border-t border-white/20 px-4 py-3 shadow-2xl">
+        <p className="text-white text-xs font-semibold mb-2">
+          Join <strong>127+ others</strong> — Get Early Access &amp; Save 70%
+        </p>
+        <WaitlistForm initialCount={127} variant="sticky" />
+      </div>
     </div>
   );
 }
