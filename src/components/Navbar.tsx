@@ -25,6 +25,12 @@ export default function Navbar() {
               Compare Bids
             </Link>
             <Link
+              href="/costs"
+              className="text-slate-600 hover:text-[#1E40AF] text-sm font-medium transition-colors"
+            >
+              Cost Guides
+            </Link>
+            <Link
               href="/about"
               className="text-slate-600 hover:text-[#1E40AF] text-sm font-medium transition-colors"
             >
@@ -65,6 +71,13 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
             >
               Compare Bids
+            </Link>
+            <Link
+              href="/costs"
+              className="text-slate-600 hover:text-[#1E40AF] text-sm font-medium py-2 border-b border-slate-100"
+              onClick={() => setMenuOpen(false)}
+            >
+              Cost Guides
             </Link>
             <Link
               href="/about"
